@@ -5,7 +5,7 @@
 // 已知解（开发期自检，不暴露给玩家）：
 //   简单：aA!VJanuaryMars97531            （12 条全过）
 //   困难：aA!V9753179997531799            （20 条全过）
-//   地狱：无解（规则自相矛盾，讽刺现实）
+//   地狱：前 23 条有解（如 aA!V9979313999711599），但第 24 条「你被骗了」永远返回 false
 
 const HTML = String.raw`<!DOCTYPE html>
 <html lang="zh-CN">
@@ -208,32 +208,32 @@ var hardRules=[
   {text:'密码中数字的总个数为偶数',check:function(p){return evenDigitCount(p);}}
 ];
 
-// ---- 地狱模式 24 条（全数学逻辑，自相矛盾，无解）----
+// ---- 地狱模式 24 条（前 23 条合理且极度困难，最后 1 条揭示冲突，无解）----
 var hellRules=[
   {text:'密码至少 8 位',check:function(p){return p.length>=8;}},
   {text:'必须包含大写字母',check:function(p){return /[A-Z]/.test(p);}},
   {text:'必须包含小写字母',check:function(p){return /[a-z]/.test(p);}},
   {text:'必须包含数字',check:function(p){return /[0-9]/.test(p);}},
   {text:'必须包含特殊字符',check:function(p){return SPECIAL.test(p);}},
-  {text:'所有数字之和必须等于 50',check:function(p){return digitSum(p)===50;}},
-  {text:'所有数字之和必须等于 60  〔与前条冲突〕',check:function(p){return digitSum(p)===60;}},
   {text:'密码长度必须为偶数',check:function(p){return p.length%2===0;}},
-  {text:'密码长度必须为奇数  〔与前条冲突〕',check:function(p){return p.length%2===1;}},
-  {text:'密码中所有数字必须都是偶数',check:function(p){return allEvenDigits(p);}},
-  {text:'密码中所有数字必须都是奇数  〔与前条冲突〕',check:function(p){return allOddDigits(p);}},
-  {text:'密码中恰好包含 4 个数字',check:function(p){return getDigits(p).length===4;}},
-  {text:'密码中恰好包含 6 个数字  〔与前条冲突〕',check:function(p){return getDigits(p).length===6;}},
-  {text:'密码中最大数字必须等于 3',check:function(p){var d=getDigits(p);return d.length>0&&Math.max.apply(null,d)===3;}},
-  {text:'密码中最小数字必须等于 7  〔与前条冲突〕',check:function(p){var d=getDigits(p);return d.length>0&&Math.min.apply(null,d)===7;}},
-  {text:'密码中所有数字的乘积必须为质数',check:function(p){var d=getDigits(p);if(d.length===0)return false;return isPrime(d.reduce(function(a,b){return a*b;},1));}},
-  {text:'密码中所有数字的乘积必须为偶数  〔与前条冲突〕',check:function(p){return digitProductDivisible(p,2);}},
+  {text:'所有数字之和必须等于 100',check:function(p){return digitSum(p)===100;}},
+  {text:'密码中所有数字必须都是奇数',check:function(p){return allOddDigits(p);}},
+  {text:'密码中至少包含 5 个不同的数字',check:function(p){return distinctDigitCount(p)>=5;}},
+  {text:'密码中最大数字减去最小数字等于 8',check:function(p){return maxMinDigitDiff(p)===8;}},
+  {text:'数字 9 至少出现 3 次',check:function(p){return countDigit(p,9)>=3;}},
+  {text:'数字 1 至少出现 2 次',check:function(p){return countDigit(p,1)>=2;}},
+  {text:'密码中所有数字的乘积能被 15 整除',check:function(p){return digitProductDivisible(p,15);}},
+  {text:'密码中相邻数字之差不超过 6',check:function(p){return adjacentDiffOk(p,6);}},
+  {text:'密码中数字 7 至少出现 1 次',check:function(p){return countDigit(p,7)>=1;}},
   {text:'密码中数字 5 至少出现 1 次',check:function(p){return countDigit(p,5)>=1;}},
-  {text:'密码中不得包含数字 5  〔与前条冲突〕',check:function(p){return countDigit(p,5)===0;}},
-  {text:'密码中相邻数字之差不超过 2',check:function(p){return adjacentDiffOk(p,2);}},
-  {text:'密码中必须同时包含数字 1 和数字 9  〔与前条冲突〕',check:function(p){return countDigit(p,1)>=1&&countDigit(p,9)>=1;}},
-  {text:'密码中所有数字必须相同',check:function(p){return allDigitsSame(p);}},
-  {text:'密码中必须包含至少 3 个不同的数字  〔与前条冲突〕',check:function(p){return distinctDigitCount(p)>=3;}},
-  {text:'当前规则已无法全部满足。请反思您对「安全」的执念。',check:function(p){return false;}}
+  {text:'密码中数字 3 至少出现 1 次',check:function(p){return countDigit(p,3)>=1;}},
+  {text:'密码的前半部分与后半部分数字之和相等',check:function(p){return halfDigitSumEqual(p);}},
+  {text:'密码中数字的总个数为偶数',check:function(p){return evenDigitCount(p);}},
+  {text:'密码中所有数字的乘积必须大于 500000',check:function(p){var d=getDigits(p);if(d.length===0)return false;return d.reduce(function(a,b){return a*b;},1)>500000;}},
+  {text:'密码中数字的总个数必须至少为 12',check:function(p){return getDigits(p).length>=12;}},
+  {text:'密码中数字 9 必须是最大数字',check:function(p){var d=getDigits(p);return d.length>0&&Math.max.apply(null,d)===9;}},
+  {text:'密码中每个奇数数字都必须出现至少 1 次',check:function(p){var d=getDigits(p);return countDigit(p,1)>=1&&countDigit(p,3)>=1&&countDigit(p,5)>=1&&countDigit(p,7)>=1&&countDigit(p,9)>=1;}},
+  {text:'你被骗了',check:function(p){return false;}}
 ];
 
 var RULES={easy:easyRules,hard:hardRules,hell:hellRules};
