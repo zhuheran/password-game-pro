@@ -3,8 +3,8 @@
 // 一个 Cloudflare Worker，返回完整 HTML（内联 CSS/JS，零构建）
 //
 // 已知解（开发期自检，不暴露给玩家）：
-//   简单：aA!V一月火星鼠唐7990         （12 条全过）
-//   困难：中国红车aA!V一月火星鼠唐2024立春7s9999999994 （20 条全过）
+//   简单：aA!VJanuaryMars鼠唐79900       （12 条全过）
+//   困难：中国红车aA!VJanuaryMars鼠唐2024立春7s9999999994 （20 条全过）
 //   地狱：无解（规则自相矛盾，讽刺现实）
 
 const HTML = String.raw`<!DOCTYPE html>
@@ -136,8 +136,8 @@ footer a{color:var(--ink-soft);text-decoration:none;border-bottom:1px dotted}
 
 <script>
 // ---- 词库 ----
-var MONTHS=['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
-var PLANETS=['水星','金星','地球','火星','木星','土星','天王星','海王星'];
+var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var PLANETS=['Mercury','Venus','Earth','Mars','Jupiter','Saturn','Uranus','Neptune'];
 var ZODIAC=['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'];
 var DYNASTY=['夏','商','周','秦','汉','晋','隋','唐','宋','元','明','清'];
 var ELEMENTS=['H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg','Al','Si','P','S','Cl','Ar','K','Ca','Sc','Ti','V','Cr','Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr','Rb','Sr','Y','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd','In','Sn','Sb','Te','I','Xe','Cs','Ba','La','Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb','Lu','Hf','Ta','W','Re','Os','Ir','Pt','Au','Hg','Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th','Pa','U','Np','Pu','Am','Cm','Bk','Cf','Es','Fm','Md','No','Lr','Rf','Db','Sg','Bh','Hs','Mt','Ds','Rg','Cn','Nh','Fl','Mc','Lv','Ts','Og'];
