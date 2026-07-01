@@ -68,7 +68,7 @@ h1{font-size:30px;font-weight:900;letter-spacing:.3em;margin-bottom:6px}
 .rules{display:flex;flex-direction:column;gap:8px}
 .rule{
   border:1px solid var(--line-soft);background:rgba(255,253,243,.7);
-  padding:12px 16px;display:grid;grid-template-columns:34px 1fr auto;
+  padding:12px 16px;display:grid;grid-template-columns:34px 1fr auto auto;
   gap:12px;align-items:center;font-family:'JetBrains Mono',monospace;
   font-size:13px;line-height:1.5;position:relative;
   animation:stampIn .42s cubic-bezier(.2,.9,.3,1.2);
@@ -82,8 +82,11 @@ h1{font-size:30px;font-weight:900;letter-spacing:.3em;margin-bottom:6px}
 .rule.active .badge{color:var(--orange);border-color:var(--orange)}
 .rule.broken{border-color:var(--red);background:rgba(168,40,32,.05)}
 .rule.broken .badge{color:var(--red);border-color:var(--red)}
-.rule.force{border-color:var(--orange);background:rgba(184,101,28,.06)}
-.rule.force .badge{color:var(--orange);border-color:var(--orange)}
+.rule.failed{border-color:var(--red);background:rgba(168,40,32,.12)}
+.rule.failed .badge{color:var(--red);border-color:var(--red)}
+.rule .countdown{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;min-width:30px;text-align:right}
+.rule.active .countdown{color:var(--orange)}
+.rule.broken .countdown{color:var(--red)}
 @keyframes stampIn{0%{opacity:0;transform:translateY(-8px) scale(.96)}60%{transform:translateY(0) scale(1.02)}100%{opacity:1;transform:translateY(0) scale(1)}}
 .modal-bg{position:fixed;inset:0;background:rgba(28,26,20,.72);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
 .modal-bg.show{display:flex}
@@ -127,7 +130,6 @@ footer a{color:var(--ink-soft);text-decoration:none;border-bottom:1px dotted}
 <div class="modal-bg" id="winModal">
   <div class="modal" id="modalBox">
     <div class="big-stamp" id="bigStamp">审 批 通 过</div>
-    <p id="modalMsg"></p>
     <button id="modalBtn">知悉</button>
   </div>
 </div>
@@ -228,9 +230,10 @@ var RULES={easy:easyRules,hard:hardRules,hell:hellRules};
 // ---- 状态 ----
 var mode='easy';
 var visibleCount=1;
-var forcePassed={};
-var ruleVisibleSince={};
+var ruleTimers={};
+var failedRule=-1;
 var won=false;
+var TIMEOUT=30000;
 
 var input=document.getElementById('pwd');
 var rulesEl=document.getElementById('rules');
@@ -241,10 +244,9 @@ var statusEl=document.getElementById('status');
 var modal=document.getElementById('winModal');
 var modalBox=document.getElementById('modalBox');
 var bigStamp=document.getElementById('bigStamp');
-var modalMsg=document.getElementById('modalMsg');
 
 function reset(){
-  visibleCount=1;forcePassed={};ruleVisibleSince={};won=false;
+  visibleCount=1;ruleTimers={};failedRule=-1;won=false;
   input.value='';rulesEl.innerHTML='';
   modal.classList.remove('show');
   statusEl.textContent='';statusEl.classList.remove('warn');
@@ -263,30 +265,42 @@ function update(){
   var rules=RULES[mode];
   lenEl.textContent=p.length;
   dsumEl.textContent=digitSum(p);
+  var now=Date.now();
 
-  if(mode==='hell'){
-    var topIdx=visibleCount-1;
-    if(topIdx<rules.length-1){
-      if(ruleVisibleSince[topIdx]===undefined)ruleVisibleSince[topIdx]=Date.now();
-      var top=rules[topIdx];
-      if(top.check(p)){
-        visibleCount++;delete ruleVisibleSince[topIdx];
-      }else if(Date.now()-ruleVisibleSince[topIdx]>6000){
-        forcePassed[topIdx]=true;visibleCount++;delete ruleVisibleSince[topIdx];
+  if(won){renderRules();return;}
+
+  // 揭示下一条规则：顶部规则满足后揭示下一条
+  while(visibleCount<rules.length&&rules[visibleCount-1].check(p)){
+    delete ruleTimers[visibleCount-1];
+    visibleCount++;
+  }
+
+  // 检查所有可见规则的倒计时
+  for(var i=0;i<visibleCount;i++){
+    var ok=rules[i].check(p);
+    if(ok){
+      delete ruleTimers[i];
+    }else{
+      if(ruleTimers[i]===undefined)ruleTimers[i]=now;
+      if(now-ruleTimers[i]>=TIMEOUT){
+        failedRule=i;won=true;showFail();
+        renderRules();return;
       }
     }
-  }else{
-    while(visibleCount<rules.length&&rules[visibleCount-1].check(p))visibleCount++;
   }
 
   progEl.textContent=visibleCount+'/'+rules.length;
 
-  // 状态提示
-  var allPass=rules.slice(0,visibleCount).every(function(r){return r.check(input.value);});
-  if(mode==='hell'&&visibleCount===rules.length&&!won){
-    won=true;showHellFail();
-  }else if(mode!=='hell'&&visibleCount===rules.length&&allPass&&!won){
-    won=true;showWin();
+  // 胜利判定：所有规则可见且全部满足
+  if(visibleCount===rules.length){
+    var allPass=true;
+    for(var j=0;j<rules.length;j++){
+      if(!rules[j].check(p)){allPass=false;break;}
+    }
+    if(allPass&&!won){
+      won=true;showWin();
+      renderRules();return;
+    }
   }
 
   // 状态文字
@@ -309,28 +323,43 @@ function update(){
 function renderRules(){
   var p=input.value;
   var rules=RULES[mode];
-  var stateText={passed:'已通过',active:'待审',broken:'驳回',force:'强通'};
+  var now=Date.now();
+  var stateText={passed:'已通过',active:'待审',broken:'驳回',failed:'失败'};
   for(var i=0;i<visibleCount;i++){
     var rule=rules[i];
     var ok=rule.check(p);
     var state;
-    if(forcePassed[i])state='force';
-    else if(i<visibleCount-1)state=ok?'passed':'broken';
-    else state=ok?'passed':'active';
+    var cdText='';
+
+    if(won&&i===failedRule){
+      state='failed';
+    }else if(ok){
+      state='passed';
+    }else{
+      if(i===visibleCount-1)state='active';
+      else state='broken';
+      if(!won){
+        var elapsed=ruleTimers[i]!==undefined?now-ruleTimers[i]:0;
+        var remain=Math.max(0,Math.ceil((TIMEOUT-elapsed)/1000));
+        cdText=remain+'s';
+      }
+    }
 
     var el=rulesEl.children[i];
     if(!el){
       el=document.createElement('div');
       var num=document.createElement('div');num.className='num';
       var text=document.createElement('div');text.className='text';
+      var cd=document.createElement('div');cd.className='countdown';
       var badge=document.createElement('div');badge.className='badge';
-      el.appendChild(num);el.appendChild(text);el.appendChild(badge);
+      el.appendChild(num);el.appendChild(text);el.appendChild(cd);el.appendChild(badge);
       rulesEl.appendChild(el);
     }
     el.className='rule '+state;
     el.children[0].textContent=(i+1<10?'0':'')+(i+1);
     el.children[1].textContent=rule.text;
-    el.children[2].textContent=stateText[state];
+    el.children[2].textContent=cdText;
+    el.children[3].textContent=stateText[state];
   }
   while(rulesEl.children.length>visibleCount)rulesEl.removeChild(rulesEl.lastChild);
 }
@@ -338,16 +367,12 @@ function renderRules(){
 function showWin(){
   bigStamp.textContent='审 批 通 过';
   modalBox.classList.remove('hell');
-  modalMsg.textContent=mode==='easy'
-    ?'审批通过。您的密码已录入第七十二号档案。讽刺的是，它并不比「123456」更安全。'
-    :'审批通过。您已通过全部 20 项审查。系统建议您将密码刻在石碑上以防遗忘，并通知您的继承人。';
   modal.classList.add('show');
 }
 
-function showHellFail(){
-  bigStamp.textContent='审 批 终 止';
+function showFail(){
+  bigStamp.textContent='失 败';
   modalBox.classList.add('hell');
-  modalMsg.textContent='您已查阅全部 24 条规则。经系统判定，您的密码永无通过之可能——因为规则本身自相矛盾。这正是您每日面对的互联网现实。';
   modal.classList.add('show');
 }
 
@@ -358,8 +383,8 @@ for(var i=0;i<btns.length;i++)btns[i].addEventListener('click',function(){setMod
 document.getElementById('resetBtn').addEventListener('click',reset);
 document.getElementById('modalBtn').addEventListener('click',function(){modal.classList.remove('show');});
 
-// 定时驱动地狱模式的「强通」计时
-setInterval(update,400);
+// 定时驱动倒计时
+setInterval(update,200);
 
 setMode('easy');
 </script>
