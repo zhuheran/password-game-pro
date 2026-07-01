@@ -3,8 +3,8 @@
 // 一个 Cloudflare Worker，返回完整 HTML（内联 CSS/JS，零构建）
 //
 // 已知解（开发期自检，不暴露给玩家）：
-//   简单：aA!VJanuaryMars鼠唐79900       （12 条全过）
-//   困难：中国红车aA!VJanuaryMars鼠唐2024立春7s9999999994 （20 条全过）
+//   简单：aA!VJanuaryMars97531            （12 条全过）
+//   困难：aA!V9753179997531799            （20 条全过）
 //   地狱：无解（规则自相矛盾，讽刺现实）
 
 const HTML = String.raw`<!DOCTYPE html>
@@ -156,6 +156,17 @@ function isLeap(n){return n>=1&&n<=9999&&((n%4===0&&n%100!==0)||n%400===0);}
 function isPrime(n){if(n<2)return false;for(var i=2;i*i<=n;i++)if(n%i===0)return false;return true;}
 function hasPalin3(p){for(var i=0;i<=p.length-3;i++)if(p[i]===p[i+2])return true;return false;}
 function any(arr,p){return arr.some(function(m){return p.indexOf(m)>=0;});}
+function getDigits(p){return (p.match(/[0-9]/g)||[]).map(Number);}
+function allOddDigits(p){var d=getDigits(p);return d.length>0&&d.every(function(x){return x%2===1;});}
+function allEvenDigits(p){var d=getDigits(p);return d.length>0&&d.every(function(x){return x%2===0;});}
+function distinctDigitCount(p){return new Set(getDigits(p)).size;}
+function maxMinDigitDiff(p){var d=getDigits(p);if(d.length===0)return -1;return Math.max.apply(null,d)-Math.min.apply(null,d);}
+function countDigit(p,n){return getDigits(p).filter(function(x){return x===n;}).length;}
+function adjacentDiffOk(p,maxDiff){var d=getDigits(p);if(d.length<2)return true;for(var i=0;i<d.length-1;i++)if(Math.abs(d[i]-d[i+1])>maxDiff)return false;return true;}
+function digitProductDivisible(p,n){var d=getDigits(p);if(d.length===0)return false;var prod=d.reduce(function(a,b){return a*b;},1);return prod%n===0;}
+function halfDigitSumEqual(p){var d=getDigits(p);if(d.length===0||d.length%2!==0)return false;var h=d.length/2;var s1=d.slice(0,h).reduce(function(a,b){return a+b;},0);var s2=d.slice(h).reduce(function(a,b){return a+b;},0);return s1===s2;}
+function evenDigitCount(p){return getDigits(p).length%2===0&&getDigits(p).length>0;}
+function allDigitsSame(p){var d=getDigits(p);return d.length>0&&d.every(function(x){return x===d[0];});}
 
 // ---- 简单模式 12 条（必有解）----
 var easyRules=[
@@ -169,11 +180,11 @@ var easyRules=[
   {text:'必须包含一颗行星名',check:function(p){return any(PLANETS,p);}},
   {text:'密码长度必须为偶数',check:function(p){return p.length%2===0;}},
   {text:'必须包含一个罗马数字字母',check:function(p){return ROMAN.test(p);}},
-  {text:'必须包含一个生肖',check:function(p){return any(ZODIAC,p);}},
-  {text:'必须包含一个中国朝代名',check:function(p){return any(DYNASTY,p);}}
+  {text:'密码中所有数字必须都是奇数',check:function(p){return allOddDigits(p);}},
+  {text:'密码中至少包含 3 个不同的数字',check:function(p){return distinctDigitCount(p)>=3;}}
 ];
 
-// ---- 困难模式 20 条（必有解）----
+// ---- 困难模式 20 条（全数学逻辑，必有解）----
 var hardRules=[
   {text:'密码至少 8 位',check:function(p){return p.length>=8;}},
   {text:'必须包含大写字母',check:function(p){return /[A-Z]/.test(p);}},
@@ -181,47 +192,47 @@ var hardRules=[
   {text:'必须包含数字',check:function(p){return /[0-9]/.test(p);}},
   {text:'必须包含特殊字符',check:function(p){return SPECIAL.test(p);}},
   {text:'所有数字之和必须等于 100',check:function(p){return digitSum(p)===100;}},
-  {text:'必须包含一个月份名',check:function(p){return any(MONTHS,p);}},
-  {text:'必须包含一颗行星名',check:function(p){return any(PLANETS,p);}},
   {text:'密码长度必须为偶数',check:function(p){return p.length%2===0;}},
   {text:'必须包含一个罗马数字字母',check:function(p){return ROMAN.test(p);}},
-  {text:'必须包含一个生肖',check:function(p){return any(ZODIAC,p);}},
-  {text:'必须包含一个中国朝代名',check:function(p){return any(DYNASTY,p);}},
-  {text:'必须包含一个化学元素符号',check:function(p){return any(ELEMENTS,p);}},
-  {text:'必须包含一个国家名',check:function(p){return any(COUNTRIES,p);}},
-  {text:'必须包含一个中国象棋棋子',check:function(p){return any(CHESS,p);}},
-  {text:'必须包含一个三字符回文',check:function(p){return hasPalin3(p);}},
-  {text:'必须包含一个颜色名',check:function(p){return any(COLORS,p);}},
-  {text:'必须包含一个闰年',check:function(p){return extractNumbers(p).some(isLeap);}},
-  {text:'必须包含一个质数',check:function(p){return extractNumbers(p).some(isPrime);}},
-  {text:'必须包含一个二十四节气名',check:function(p){return any(SOLAR_TERMS,p);}}
+  {text:'密码中所有数字必须都是奇数',check:function(p){return allOddDigits(p);}},
+  {text:'密码中至少包含 5 个不同的数字',check:function(p){return distinctDigitCount(p)>=5;}},
+  {text:'密码中最大数字减去最小数字等于 8',check:function(p){return maxMinDigitDiff(p)===8;}},
+  {text:'数字 9 至少出现 3 次',check:function(p){return countDigit(p,9)>=3;}},
+  {text:'数字 1 至少出现 2 次',check:function(p){return countDigit(p,1)>=2;}},
+  {text:'密码中所有数字的乘积能被 15 整除',check:function(p){return digitProductDivisible(p,15);}},
+  {text:'密码中相邻数字之差不超过 6',check:function(p){return adjacentDiffOk(p,6);}},
+  {text:'密码中数字 7 至少出现 1 次',check:function(p){return countDigit(p,7)>=1;}},
+  {text:'密码中数字 5 至少出现 1 次',check:function(p){return countDigit(p,5)>=1;}},
+  {text:'密码中数字 3 至少出现 1 次',check:function(p){return countDigit(p,3)>=1;}},
+  {text:'密码的前半部分与后半部分数字之和相等',check:function(p){return halfDigitSumEqual(p);}},
+  {text:'密码中数字的总个数为偶数',check:function(p){return evenDigitCount(p);}}
 ];
 
-// ---- 地狱模式 24 条（自相矛盾，无解）----
+// ---- 地狱模式 24 条（全数学逻辑，自相矛盾，无解）----
 var hellRules=[
   {text:'密码至少 8 位',check:function(p){return p.length>=8;}},
   {text:'必须包含大写字母',check:function(p){return /[A-Z]/.test(p);}},
   {text:'必须包含小写字母',check:function(p){return /[a-z]/.test(p);}},
   {text:'必须包含数字',check:function(p){return /[0-9]/.test(p);}},
   {text:'必须包含特殊字符',check:function(p){return SPECIAL.test(p);}},
-  {text:'所有数字之和必须等于 25',check:function(p){return digitSum(p)===25;}},
-  {text:'所有数字之和必须等于 30  〔与前条冲突〕',check:function(p){return digitSum(p)===30;}},
+  {text:'所有数字之和必须等于 50',check:function(p){return digitSum(p)===50;}},
+  {text:'所有数字之和必须等于 60  〔与前条冲突〕',check:function(p){return digitSum(p)===60;}},
   {text:'密码长度必须为偶数',check:function(p){return p.length%2===0;}},
   {text:'密码长度必须为奇数  〔与前条冲突〕',check:function(p){return p.length%2===1;}},
-  {text:'不得包含字母 e（大小写皆禁）',check:function(p){return !/e/i.test(p);}},
-  {text:'必须包含单词「Welcome」  〔含 e，与前条冲突〕',check:function(p){return p.indexOf('Welcome')>=0;}},
-  {text:'恰好包含 5 个数字',check:function(p){return (p.match(/[0-9]/g)||[]).length===5;}},
-  {text:'恰好包含 3 个数字  〔与前条冲突〕',check:function(p){return (p.match(/[0-9]/g)||[]).length===3;}},
-  {text:'密码必须只含中文字符',check:function(p){return /^[\u4e00-\u9fa5]+$/.test(p);}},
-  {text:'必须包含至少一个字母  〔与前条冲突〕',check:function(p){return /[a-zA-Z]/.test(p);}},
-  {text:'必须包含一个闰年',check:function(p){return extractNumbers(p).some(isLeap);}},
-  {text:'不得包含任何数字  〔与多前条冲突〕',check:function(p){return !/[0-9]/.test(p);}},
-  {text:'密码必须以数字开头',check:function(p){return /^[0-9]/.test(p);}},
-  {text:'密码必须以字母结尾',check:function(p){return /[a-zA-Z]$/.test(p);}},
-  {text:'密码必须以数字结尾  〔与前条冲突〕',check:function(p){return /[0-9]$/.test(p);}},
-  {text:'不得包含任何大写字母  〔与第 2 条冲突〕',check:function(p){return !/[A-Z]/.test(p);}},
-  {text:'必须包含罗马数字 V',check:function(p){return /V/.test(p);}},
-  {text:'不得包含字母 V（大小写皆禁）  〔与前条冲突〕',check:function(p){return !/v/i.test(p);}},
+  {text:'密码中所有数字必须都是偶数',check:function(p){return allEvenDigits(p);}},
+  {text:'密码中所有数字必须都是奇数  〔与前条冲突〕',check:function(p){return allOddDigits(p);}},
+  {text:'密码中恰好包含 4 个数字',check:function(p){return getDigits(p).length===4;}},
+  {text:'密码中恰好包含 6 个数字  〔与前条冲突〕',check:function(p){return getDigits(p).length===6;}},
+  {text:'密码中最大数字必须等于 3',check:function(p){var d=getDigits(p);return d.length>0&&Math.max.apply(null,d)===3;}},
+  {text:'密码中最小数字必须等于 7  〔与前条冲突〕',check:function(p){var d=getDigits(p);return d.length>0&&Math.min.apply(null,d)===7;}},
+  {text:'密码中所有数字的乘积必须为质数',check:function(p){var d=getDigits(p);if(d.length===0)return false;return isPrime(d.reduce(function(a,b){return a*b;},1));}},
+  {text:'密码中所有数字的乘积必须为偶数  〔与前条冲突〕',check:function(p){return digitProductDivisible(p,2);}},
+  {text:'密码中数字 5 至少出现 1 次',check:function(p){return countDigit(p,5)>=1;}},
+  {text:'密码中不得包含数字 5  〔与前条冲突〕',check:function(p){return countDigit(p,5)===0;}},
+  {text:'密码中相邻数字之差不超过 2',check:function(p){return adjacentDiffOk(p,2);}},
+  {text:'密码中必须同时包含数字 1 和数字 9  〔与前条冲突〕',check:function(p){return countDigit(p,1)>=1&&countDigit(p,9)>=1;}},
+  {text:'密码中所有数字必须相同',check:function(p){return allDigitsSame(p);}},
+  {text:'密码中必须包含至少 3 个不同的数字  〔与前条冲突〕',check:function(p){return distinctDigitCount(p)>=3;}},
   {text:'当前规则已无法全部满足。请反思您对「安全」的执念。',check:function(p){return false;}}
 ];
 
