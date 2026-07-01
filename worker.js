@@ -12,7 +12,7 @@ const HTML = String.raw`<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>密码审批科 · The Password Bureau</title>
+<title>The Password Bureau</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -52,7 +52,6 @@ h1{font-size:30px;font-weight:900;letter-spacing:.3em;margin-bottom:6px}
 .modes button.active{background:var(--ink);color:var(--paper-light);font-weight:700}
 .modes button.hell.active{background:var(--red)}
 .input-zone{background:var(--paper-light);border:1px solid var(--line);padding:18px 20px;margin-bottom:22px;position:relative}
-.input-zone::before{content:'机密';position:absolute;top:-10px;left:14px;background:var(--paper);padding:0 8px;font-size:11px;color:var(--red);letter-spacing:.3em;font-family:'JetBrains Mono',monospace}
 .input-zone label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:10px;letter-spacing:.05em}
 #pwd{
   width:100%;padding:13px 14px;font-family:'JetBrains Mono',monospace;
@@ -100,11 +99,6 @@ footer a{color:var(--ink-soft);text-decoration:none;border-bottom:1px dotted}
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>密码审批科</h1>
-    <div class="sub">WINDOW NO.72 · 第七十二号审批窗口</div>
-  </header>
-
   <nav class="modes">
     <button data-mode="easy">简单模式</button>
     <button data-mode="hard">困难模式</button>
@@ -126,7 +120,6 @@ footer a{color:var(--ink-soft);text-decoration:none;border-bottom:1px dotted}
   <section class="rules" id="rules"></section>
 
   <footer>
-    密码审批科 · 仅以讽刺为业 · 本窗口服务永远不结束<br>
     部署于 Cloudflare Workers · 无后端 · 无 cookie · 无出路
   </footer>
 </div>
@@ -170,12 +163,12 @@ var easyRules=[
   {text:'必须包含数字',check:function(p){return /[0-9]/.test(p);}},
   {text:'必须包含特殊字符',check:function(p){return SPECIAL.test(p);}},
   {text:'所有数字之和必须等于 25',check:function(p){return digitSum(p)===25;}},
-  {text:'必须包含一个月份名（如「三月」）',check:function(p){return any(MONTHS,p);}},
-  {text:'必须包含一颗行星名（如「火星」）',check:function(p){return any(PLANETS,p);}},
+  {text:'必须包含一个月份名',check:function(p){return any(MONTHS,p);}},
+  {text:'必须包含一颗行星名',check:function(p){return any(PLANETS,p);}},
   {text:'密码长度必须为偶数',check:function(p){return p.length%2===0;}},
-  {text:'必须包含一个罗马数字字母（I V X L C D M）',check:function(p){return ROMAN.test(p);}},
-  {text:'必须包含一个生肖（鼠牛虎兔…）',check:function(p){return any(ZODIAC,p);}},
-  {text:'必须包含一个中国朝代名（唐宋元明清…）',check:function(p){return any(DYNASTY,p);}}
+  {text:'必须包含一个罗马数字字母',check:function(p){return ROMAN.test(p);}},
+  {text:'必须包含一个生肖',check:function(p){return any(ZODIAC,p);}},
+  {text:'必须包含一个中国朝代名',check:function(p){return any(DYNASTY,p);}}
 ];
 
 // ---- 困难模式 20 条（必有解）----
@@ -192,14 +185,14 @@ var hardRules=[
   {text:'必须包含一个罗马数字字母',check:function(p){return ROMAN.test(p);}},
   {text:'必须包含一个生肖',check:function(p){return any(ZODIAC,p);}},
   {text:'必须包含一个中国朝代名',check:function(p){return any(DYNASTY,p);}},
-  {text:'必须包含一个化学元素符号（如 H、O、Fe、V）',check:function(p){return any(ELEMENTS,p);}},
-  {text:'必须包含一个国家名（如「中国」）',check:function(p){return any(COUNTRIES,p);}},
-  {text:'必须包含一个中国象棋棋子（车马炮帅将士相象兵卒）',check:function(p){return any(CHESS,p);}},
-  {text:'必须包含一个三字符回文（如「aba」「999」）',check:function(p){return hasPalin3(p);}},
-  {text:'必须包含一个颜色名（红黄蓝绿…）',check:function(p){return any(COLORS,p);}},
-  {text:'必须包含一个闰年（如 2024、2000）',check:function(p){return extractNumbers(p).some(isLeap);}},
-  {text:'必须包含一个质数（如 2、3、5、7）',check:function(p){return extractNumbers(p).some(isPrime);}},
-  {text:'必须包含一个二十四节气名（如「立春」）',check:function(p){return any(SOLAR_TERMS,p);}}
+  {text:'必须包含一个化学元素符号',check:function(p){return any(ELEMENTS,p);}},
+  {text:'必须包含一个国家名',check:function(p){return any(COUNTRIES,p);}},
+  {text:'必须包含一个中国象棋棋子',check:function(p){return any(CHESS,p);}},
+  {text:'必须包含一个三字符回文',check:function(p){return hasPalin3(p);}},
+  {text:'必须包含一个颜色名',check:function(p){return any(COLORS,p);}},
+  {text:'必须包含一个闰年',check:function(p){return extractNumbers(p).some(isLeap);}},
+  {text:'必须包含一个质数',check:function(p){return extractNumbers(p).some(isPrime);}},
+  {text:'必须包含一个二十四节气名',check:function(p){return any(SOLAR_TERMS,p);}}
 ];
 
 // ---- 地狱模式 24 条（自相矛盾，无解）----
@@ -219,7 +212,7 @@ var hellRules=[
   {text:'恰好包含 3 个数字  〔与前条冲突〕',check:function(p){return (p.match(/[0-9]/g)||[]).length===3;}},
   {text:'密码必须只含中文字符',check:function(p){return /^[\u4e00-\u9fa5]+$/.test(p);}},
   {text:'必须包含至少一个字母  〔与前条冲突〕',check:function(p){return /[a-zA-Z]/.test(p);}},
-  {text:'必须包含一个闰年（如 2024）',check:function(p){return extractNumbers(p).some(isLeap);}},
+  {text:'必须包含一个闰年',check:function(p){return extractNumbers(p).some(isLeap);}},
   {text:'不得包含任何数字  〔与多前条冲突〕',check:function(p){return !/[0-9]/.test(p);}},
   {text:'密码必须以数字开头',check:function(p){return /^[0-9]/.test(p);}},
   {text:'密码必须以字母结尾',check:function(p){return /[a-zA-Z]$/.test(p);}},
